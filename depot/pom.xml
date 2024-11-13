@@ -85,7 +85,7 @@
 			<optional>true</optional>
 		</dependency>
 
-		<!--HTTP请求依赖 向统一认证平台发送HTTP请求-->
+		<!--HTTP请求依赖 发送HTTP请求-->
 		<dependency>
 			<groupId>com.konghq</groupId>
 			<artifactId>unirest-java</artifactId>
