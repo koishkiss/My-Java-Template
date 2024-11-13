@@ -1,0 +1,83 @@
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  datasource:
+    hikari:
+      # 连接池最大连接数，默认是 10
+      maximum-pool-size: 60
+      # 链接超时时间，默认 30000(30 秒)
+      connection-timeout: 60000
+      # 空闲连接存活最大时间，默认 600000(10 分钟)
+      idle-timeout: 60000
+      # 连接将被测试活动的最大时间量
+      validation-timeout: 3000
+      # 此属性控制池中连接的最长生命周期，值 0 表示无限生命周期，默认 1800000(30 分钟)
+      max-lifetime: 600000
+      # 连接到数据库时等待的最长时间(秒)
+      login-timeout: 5
+      # 池中维护的最小空闲连接数
+      minimum-idle: 10
+    # 连接mysql的驱动类
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # mysql服务地址 格式：jdbc:mysql://{mysql服务所在IP地址}:{mysql服务所在端口}/{数据库名称}?{一些参数}
+    url: jdbc:mysql://127.0.0.1:3306/depot_test?useUnicode=true&characterEncoding=utf-8&useSSL=true&jdbcCompliantTruncation=false&allowMultiQueries=true
+    # 使用的用户名
+    username: root
+    # 用户名对应的密码
+    password: 123456
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+server:
+  port: 5140
+
+path:
+  #  web-path: http://127.0.0.1:22222
+  web-path: http://47.113.194.64:22222
+
+  default-avatar-name: default-avatar.png
+  default-photo-name: default-photo.png
+
+  image-web-path: /image/
+  #  image-local-path: D:/resource/forum/img/
+  image-local-path: /home/resource/forum/img/
+
+  video-web-path: /video/
+  #  video-local-path: D:/resource/forum/video/
+  video-local-path: /home/resource/forum/video/
+
+  audio-web-path: /audio/
+  #  audio-local-path: D:/resource/forum/audio/
+  audio-local-path: /home/resource/forum/audio/
+
+page:
+  default-page-size: 10
+  max-page-size: 50
+  min-page-size: 1
+
+  default-scan-page-size: 4
+  max-scan-page-size: 10
+  min-scan-page-size: 1
+
+jwt:
+  #  过期时间（单位：ms）
+  expire: 604800000
+  #  密钥
+  secret: koishikoishikisskisslovelylovelykoishikoishikoishi
