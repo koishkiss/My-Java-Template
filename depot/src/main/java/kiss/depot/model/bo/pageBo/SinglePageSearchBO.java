@@ -15,7 +15,7 @@ import java.util.List;
  * 如果表中有主键字段顺序字段，我们可以通过这个字段来略过大量数据，进一步提升搜索效率
  * author: koishikiss
  * launch: 2024/11/3
- * last update: 2024/11/5
+ * last update: 2024/11/21
  * */
 
 @Getter
@@ -34,10 +34,23 @@ public class SinglePageSearchBO<T, K> {  // T:返回数据列表中的数据类�
 
     private List<T> dataList;  //得到的数据列表
 
+    private boolean checkEmpty;  //是否在获取数据后检查数据是否为空，默认开启
+
     //设置默认参数
     public SinglePageSearchBO() {
         pageSize = STATIC.VALUE.page_size;
         direction = DIRECTION.BACK;
+        checkEmpty = true;
+    }
+
+    //设置checkEmpty为false
+    public void turnOffCheckEmpty() {
+        checkEmpty = false;
+    }
+
+    //设置checkEmpty为true
+    public void turnOnCheckEmpty() {
+        checkEmpty = true;
     }
 
     //控制页大小
@@ -56,13 +69,14 @@ public class SinglePageSearchBO<T, K> {  // T:返回数据列表中的数据类�
         //如果向前搜索
         if (direction.equals(DIRECTION.FRONT)) {
             //如果传来的第一个数据为null，也就是首次搜索的状况，那么理论上不会有更新的数据
+            //由于这里按正常逻辑不应该发生，所以不加checkEmpty进行检验
             if (firstData == null) throw new CommonErrException(CommonErr.THIS_IS_FIRST_PAGE.setMsg("已经是最新了哦"));
 
             //从firstData的位置开始向前查询
             dataList = method.searchTowardFront(firstData, pageSize);
 
             //向前搜索无结果，表明已经向前搜索到头
-            if (dataList.isEmpty()) throw new CommonErrException(CommonErr.THIS_IS_FIRST_PAGE.setMsg("已经是最新了哦"));
+            if (dataList.isEmpty() && checkEmpty) throw new CommonErrException(CommonErr.THIS_IS_FIRST_PAGE.setMsg("已经是最新了哦"));
 
             //否则更新一下首条数据
             else firstData = method.updateFirstData(dataList);
@@ -73,7 +87,7 @@ public class SinglePageSearchBO<T, K> {  // T:返回数据列表中的数据类�
             dataList = method.firstSearch(pageSize);
 
             //首次搜索无结果，表明无数据
-            if (dataList.isEmpty()) throw new CommonErrException(CommonErr.NO_DATA);
+            if (dataList.isEmpty() && checkEmpty) throw new CommonErrException(CommonErr.NO_DATA);
 
             //否则将首条数据和尾条数据都更新一下
             else {
@@ -87,7 +101,7 @@ public class SinglePageSearchBO<T, K> {  // T:返回数据列表中的数据类�
             dataList = method.searchTowardBack(lastData, pageSize);
 
             //向后搜索无结果，表明已经向后搜索到头
-            if (dataList.isEmpty()) throw new CommonErrException(CommonErr.THIS_IS_LAST_PAGE.setMsg("已经翻到最后了哦"));
+            if (dataList.isEmpty() && checkEmpty) throw new CommonErrException(CommonErr.THIS_IS_LAST_PAGE.setMsg("已经翻到最后了哦"));
 
             //否则更新一下尾条数据
             else lastData = method.updateLastData(dataList);
@@ -117,8 +131,10 @@ public class SinglePageSearchBO<T, K> {  // T:返回数据列表中的数据类�
             return updateLastData(resultList);
         }
 
-        //向前搜索
-        List<T> searchTowardFront(K startPos, Integer pageSize);
+        //向前搜索（默认不使用向前搜索）
+        default List<T> searchTowardFront(K startPos, Integer pageSize) {
+            throw new CommonErrException(CommonErr.PARAM_WRONG.setMsg("不支持向前搜索!"));
+        };
 
         //向前搜索结束后更新首条数据，可以交给前端处理，因此这里使用default
         default K updateFirstData(List<T> resultList) {
