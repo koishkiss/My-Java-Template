@@ -1,13 +1,15 @@
 package kiss.depot.redis.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
+
+import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import static kiss.depot.redis.model.constant.STATIC.objectMapper;
 
@@ -24,14 +26,49 @@ public class RedisUtil {
     @Resource
     RedisTemplate<String, String> redisTemplate;
 
+    private static RedisTemplate<String, String> redis;
+
     @PostConstruct
     @SuppressWarnings("unused")
     public void init() {
         // 静态注入
-        S.VALUE = redisTemplate.opsForValue();
-        H.HASH = redisTemplate.opsForHash();
+        redis = redisTemplate;
+//        S.VALUE = redisTemplate.opsForValue();
+//        H.HASH = redisTemplate.opsForHash();
     }
 
+    // 获取键的过期时间，单位秒
+    public static long getExpire(String key) {
+        Long expire = redis.getExpire(key);
+        return expire == null ? -2 : expire;
+    }
+
+    // 获取键的过期时间，并指定单位
+    public static long getExpire(String key, TimeUnit timeUnit) {
+        Long expire = redis.getExpire(key, timeUnit);
+        return expire == null ? -2 : expire;
+    }
+
+    // 设置键的过期时间，单位秒
+    public static boolean setExpire(String key, long expire) {
+        return Boolean.TRUE.equals(redis.expire(key, expire, TimeUnit.SECONDS));
+    }
+
+    // 设置键的过期时间，并指定单位
+    public static boolean setExpire(String key, long expire, TimeUnit timeUnit) {
+        return Boolean.TRUE.equals(redis.expire(key, expire, timeUnit));
+    }
+
+    // 删除单个键
+    public static boolean delete(String key) {
+        return Boolean.TRUE.equals(redis.delete(key));
+    }
+
+    // 删除多个键
+    public static long delete(Collection<String> keys) {
+        Long deletes = redis.delete(keys);
+        return deletes == null ? -1 : deletes;
+    }
 
     /**
      * String类型数据操作
@@ -39,7 +76,7 @@ public class RedisUtil {
     public static class S {
 
         // 设置静态对象来完成对String类型数据操作
-        private static ValueOperations<String, String> VALUE;
+        private static final ValueOperations<String, String> VALUE = redis.opsForValue();
 
         // 添加一个键值对，值为String
         public static void set(String key, String value) {
@@ -63,17 +100,17 @@ public class RedisUtil {
         }
 
         // 获取一个对象类型值
-        public static <T> T getObject(String key) {
+        public static <T> T getObject(String key, Class<T> clazz) {
             try {
-                // 通过ObjectMapper将json转换为对象 (TypeReference用于获取泛型信息)
-                return objectMapper.readValue(VALUE.get(key), new TypeReference<>() {});
+                // 通过ObjectMapper将json转换为对象
+                return objectMapper.readValue(VALUE.get(key), clazz);
             } catch (JsonProcessingException e) {
                 //错误处理
                 throw new RuntimeException(e);
             }
         }
 
-        //下面可以添加更多操作
+        //可以添加更多操作
 
     }
 
@@ -83,7 +120,7 @@ public class RedisUtil {
     public static class H {
 
         // 设置静态对象来完成对Hash类型数据操作
-        private static HashOperations<String,String,String> HASH;
+        private static final HashOperations<String,String,String> HASH = redis.opsForHash();
 
         // 键-字段-值 形式的Hash设置操作
         public static void set(String key, String field, String value) {

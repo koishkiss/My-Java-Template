@@ -8,7 +8,7 @@ public class REDIS_KEY {
         public static class CODE {
             private static final String code = auth + ":code";
 
-            public static String get(String key) {
+            public static String join(String key) {
                 return code + ":" + key;
             }
         }
@@ -16,7 +16,7 @@ public class REDIS_KEY {
         public static class SESSION {
             private static final String session = auth + ":session";
 
-            public static String get(String key) {
+            public static String join(String key) {
                 return auth + ":" + key;
             }
         }
@@ -28,7 +28,7 @@ public class REDIS_KEY {
         public static class INFO {
             private static final String info = user + ":info";
 
-            public static String get(String key) {
+            public static String join(String key) {
                 return info + ":" + key;
             }
         }
