@@ -12,7 +12,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public enum RedisKey {
     USER_INFO("user:info"),
-    USER_SESSION("user:session");
+    USER_SESSION("user:session"),
+    INCR("incr");
 
     public final String prefix;
 

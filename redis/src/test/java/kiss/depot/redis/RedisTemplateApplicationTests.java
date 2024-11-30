@@ -6,7 +6,13 @@ import kiss.depot.redis.util.RedisUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 class RedisTemplateApplicationTests {
@@ -99,6 +105,95 @@ class RedisTemplateApplicationTests {
 			System.out.println((RedisUtil.getExpire("b")));
 		}
 
+	}
+
+	/**
+	 * 测试将对象存入Hash
+	 */
+	@Test
+	void setObjectTOHash() {
+		//新建一个用户
+		User user = new User("5145", "koishikiss", "415");
+
+		//打印
+		System.out.println(user);
+
+		//存入
+		RedisUtil.H.setObject(RedisKey.USER_INFO.concat(user.getUid()), user);
+
+	}
+
+	/**
+	 * 测试将对象从Hash取出
+	 */
+	@Test
+	void getObjectFromHash() {
+		//获取用户
+		User user1 = RedisUtil.H.getObject(RedisKey.USER_INFO.concat("5145"), User.class);
+
+		//打印
+		System.out.println(user1);
+	}
+
+
+
+	/**
+	 * 测试redis自增键实现自增
+	 */
+
+	//新建一线程池用于测试redis自增键
+	private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(
+			10,
+			50,
+			5,
+			TimeUnit.SECONDS,
+			new ArrayBlockingQueue<>(50));
+
+	//新建操作计数器用于测试redis自增键添加用户所用速度
+	CountDownLatch countDown = new CountDownLatch(50);
+
+	@Test
+	void testForIncrementByRedis() throws InterruptedException {
+		long start = System.currentTimeMillis();
+
+		//模拟50个用户的新建
+		for (int i = 0; i < 50; i++) {
+			//创建线程任务
+			Runnable task = () -> {
+				//获取自增键
+				Long uid = RedisUtil.S.increment(RedisKey.INCR.concat("uid"));
+
+				//打印获取的自增id
+				System.out.println(uid);
+
+				//uid不可为null
+				if (uid == null) return;
+
+				//根据自增键创建新用户
+				User user = new User();
+				user.setUid(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + uid);
+				user.setNickname("u_" + uid);
+
+				//保存用户数据到数据库（省略）
+
+				//将用户缓存至redis
+				RedisUtil.H.setObject(RedisKey.USER_INFO.concat(user.getUid()), user);
+
+				//任务结束，操作计数器减一
+				countDown.countDown();
+            };
+
+			//将任务添加到线程池
+			threadPool.execute(task);
+		}
+
+		//等待全部操作完成
+		countDown.await();
+
+		long end = System.currentTimeMillis();
+
+		//计算用时
+		System.out.println("time: " + (end - start));
 	}
 
 }
