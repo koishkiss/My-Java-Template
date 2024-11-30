@@ -1,11 +1,14 @@
-package kiss.depot.redis.util;
+package kiss.depot.util;
 
 import org.springframework.data.util.CastUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
 * 对象操作工具类
