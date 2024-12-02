@@ -46,4 +46,6 @@ A personal repository for storing template of java
 创建了websocket模版库。
 坦白讲，websocket竟然在我人生中第二个项目就用上了，
 还没玩透http就去使用websocket了啊，写出来的bug也是很多呢。（笑）
+
+在这个项目结束后，也许我应该考虑使用spring cloud将项目联合起来
 ```
