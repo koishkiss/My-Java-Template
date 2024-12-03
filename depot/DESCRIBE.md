@@ -12,6 +12,8 @@
 
 ### 描述
 
+项目结构：
+
 ```shell
 * main
   ├┈ config  # 配置类包
@@ -58,6 +60,36 @@
       ├┈ PageUtil  # 分页工具（已废弃）
       ├┈ RandomUtil  # 随机生成工具
       └┈ TextUtil  # 文本操作工具
+```
+
+mysql数据库结构：
+
+```shell
+depot_test  # 库名称
+  ├┈ depot_post  # 帖子表
+  └┈ depot_user  # 用户表
+
+
+==================== depot_post表结构 ====================
+
+CREATE TABLE `depot_post` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `content` varchar(100) NOT NULL COMMENT '随机字符串',
+  `post_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '字段产生时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+==================== depot_user表结构 ====================
+
+CREATE TABLE `depot_user` (
+  `uid` int NOT NULL AUTO_INCREMENT,
+  `sid` varchar(100) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `password` varchar(100) NOT NULL,
+  `nickname` varchar(100) NOT NULL,
+  PRIMARY KEY (`uid`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 ```
 
 ---

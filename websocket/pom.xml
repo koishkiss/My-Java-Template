@@ -90,6 +90,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!--BCrypt加密算法-->
+		<dependency>
+			<groupId>org.mindrot</groupId>
+			<artifactId>jbcrypt</artifactId>
+			<version>0.4</version>
+		</dependency>
+
 		<!--jetbrains插件(主要用于@Nullable注解等)-->
 		<dependency>
 			<groupId>org.jetbrains</groupId>

@@ -8,8 +8,22 @@ websocket使用模版。
 
 ### 描述
 
+项目结构：
+
 ```shell
 
+```
+
+mysql数据库结构：
+
+```shell
+ws_test  # 库名称
+```
+
+redis数据结构：
+
+```shell
+库index：1
 ```
 
 ---
@@ -20,5 +34,11 @@ websocket使用模版。
 
 ```text
 初始化了项目。
+```
+
+#### *2024/12/3*
+
+```text
+
 ```
 

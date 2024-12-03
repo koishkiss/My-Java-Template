@@ -21,7 +21,7 @@ spring:
     # 连接mysql的驱动类
     driver-class-name: com.mysql.cj.jdbc.Driver
     # mysql服务地址 格式：jdbc:mysql://{mysql服务所在IP地址}:{mysql服务所在端口}/{数据库名称}?{一些参数}
-    url: jdbc:mysql://127.0.0.1:3306/depot_test?useUnicode=true&characterEncoding=utf-8&useSSL=true&jdbcCompliantTruncation=false&allowMultiQueries=true
+    url: jdbc:mysql://127.0.0.1:3306/ws_test?useUnicode=true&characterEncoding=utf-8&useSSL=true&jdbcCompliantTruncation=false&allowMultiQueries=true
     # 使用的用户名
     username: root
     # 用户名对应的密码

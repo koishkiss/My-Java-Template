@@ -8,6 +8,8 @@
 
 ### 描述
 
+项目结构：
+
 ```shell
 * main
   ├┈ config  # 配置类包
@@ -23,6 +25,12 @@
   
 * test
   └┈ RdisTemplateApplicationTest  # redis基本操作相关测试
+```
+
+redis数据结构：
+
+```shell
+库index：1
 ```
 
 ---
