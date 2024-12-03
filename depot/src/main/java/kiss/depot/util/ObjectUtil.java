@@ -15,7 +15,7 @@ import java.util.Map;
 * 大量反射警告
 * author: koishikiss
 * launch: 2024/11/30
-* last update: 2024/12/1
+* last update: 2024/12/3
 * */
 
 public class ObjectUtil {

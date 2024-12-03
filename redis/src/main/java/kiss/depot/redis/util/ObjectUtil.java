@@ -12,7 +12,7 @@ import java.util.*;
 * 大量反射警告
 * author: koishikiss
 * launch: 2024/11/30
-* last update: 2024/12/1
+* last update: 2024/12/3
 * */
 
 public class ObjectUtil {
@@ -26,6 +26,23 @@ public class ObjectUtil {
             for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true);
                 m.put(field.getName(), CastUtils.cast(field.get(o)));
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        return m;
+    }
+
+    //将实体类转换为值为String的Map
+    public static <T> Map<String, String> convertToStringMap(T o) {
+        Map<String, String> m = new HashMap<>();
+
+        try {
+            Class<?> clazz = o.getClass();
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+                m.put(field.getName(), String.valueOf(field.get(o)));
             }
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);

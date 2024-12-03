@@ -29,7 +29,6 @@ public class Interceptor implements HandlerInterceptor {
                              @NotNull Object handler) {
         //打印请求路径
         log.info("一条新的请求 " + request.getServletPath());
-        System.out.println(request.getAttribute("user"));
 
         if (handler instanceof HandlerMethod handlerMethod) {
             //检查请求的接口是否需要登入

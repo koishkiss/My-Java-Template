@@ -1,6 +1,7 @@
 package kiss.depot.websocket.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.HashOperations;
@@ -9,7 +10,9 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static kiss.depot.websocket.model.constant.STATIC.objectMapper;
@@ -137,15 +140,19 @@ public class RedisUtil {
         }
 
         /** 同时将整个对象存入Hash键 */
-        public static <T> void setObject(String key, T object) {
-            HASH.putAll(key, ObjectUtil.convertToStringMap(object));
+        public static void setObject(String key, Object object) {
+            HASH.putAll(key, objectMapper.convertValue(object, new TypeReference<Map<String, String>>() {}));
         }
 
         /** 同时将整个对象从HASH中取出 */
         public static <T> T getObject(String key, Class<T> clazz) {
             List<String> fields = ObjectUtil.getFields(clazz);
             List<String> values = HASH.multiGet(key, fields);
-            return ObjectUtil.buildFromFieldsAndValuesList(fields, values, clazz);
+            Map<String, String> m = new HashMap<>();
+            for (int i = 0; i < fields.size(); i++) {
+                m.put(fields.get(i), values.get(i));
+            }
+            return objectMapper.convertValue(m, clazz);
         }
 
     }

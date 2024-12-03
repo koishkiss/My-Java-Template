@@ -1,6 +1,7 @@
 package kiss.depot.redis.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.HashOperations;
@@ -9,7 +10,9 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static kiss.depot.redis.model.constant.STATIC.objectMapper;
@@ -18,7 +21,7 @@ import static kiss.depot.redis.model.constant.STATIC.objectMapper;
 * redis工具类
 * author: koishikiss
 * launch: 2024/11/27
-* last update: 2024/11/30
+* last update: 2024/12/3
 * */
 
 @Component
@@ -74,7 +77,7 @@ public class RedisUtil {
     public static class S {
 
         // 设置静态对象来完成对String类型数据操作
-        private static final ValueOperations<String, String> VALUE = redis.opsForValue();
+        public static final ValueOperations<String, String> VALUE = redis.opsForValue();
 
         /** 添加一个键值对，值为String */
         public static void set(String key, String value) {
@@ -123,7 +126,7 @@ public class RedisUtil {
     public static class H {
 
         /** 设置静态对象来完成对Hash类型数据操作 */
-        private static final HashOperations<String,String,String> HASH = redis.opsForHash();
+        public static final HashOperations<String,String,String> HASH = redis.opsForHash();
 
         /** 键-字段-值 形式的Hash设置操作 */
         public static void set(String key, String field, String value) {
@@ -136,15 +139,19 @@ public class RedisUtil {
         }
 
         /** 同时将整个对象存入Hash键 */
-        public static <T> void setObject(String key, T object) {
-            HASH.putAll(key, ObjectUtil.convertToMap(object));
+        public static void setObject(String key, Object object) {
+            HASH.putAll(key, objectMapper.convertValue(object, new TypeReference<Map<String, String>>() {}));
         }
 
         /** 同时将整个对象从HASH中取出 */
         public static <T> T getObject(String key, Class<T> clazz) {
             List<String> fields = ObjectUtil.getFields(clazz);
             List<String> values = HASH.multiGet(key, fields);
-            return ObjectUtil.buildFromFieldsAndValuesList(fields, values, clazz);
+            Map<String, String> m = new HashMap<>();
+            for (int i = 0; i < fields.size(); i++) {
+                m.put(fields.get(i), values.get(i));
+            }
+            return objectMapper.convertValue(m, clazz);
         }
 
     }
