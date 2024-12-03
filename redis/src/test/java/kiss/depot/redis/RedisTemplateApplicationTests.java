@@ -129,7 +129,7 @@ class RedisTemplateApplicationTests {
 	@Test
 	void getObjectFromHash() {
 		//获取用户
-		User user1 = RedisUtil.H.getObject(RedisKey.USER_INFO.concat("5145"), User.class);
+		User user1 = RedisUtil.H.getObject(RedisKey.USER_INFO.concat("112"), User.class);
 
 		//打印
 		System.out.println(user1);

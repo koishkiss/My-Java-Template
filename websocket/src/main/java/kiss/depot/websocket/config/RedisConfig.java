@@ -1,4 +1,4 @@
-package kiss.depot.redis.config;
+package kiss.depot.websocket.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
