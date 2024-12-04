@@ -15,7 +15,7 @@ import java.util.LinkedHashMap;
 * 对jwt实现一定封装，包装的数据更改为一个类，方便存取
 * author: koishikiss
 * launch: 2024/11/1
-* last update: 2024/12/5
+* last update: 2024/12/4
 * */
 
 public class JwtUtil {
