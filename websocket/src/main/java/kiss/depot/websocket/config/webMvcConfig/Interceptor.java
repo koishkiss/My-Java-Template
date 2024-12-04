@@ -1,5 +1,6 @@
 package kiss.depot.websocket.config.webMvcConfig;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kiss.depot.websocket.annotation.BeforeLogin;
@@ -23,6 +24,8 @@ import org.springframework.web.servlet.ModelAndView;
 @Slf4j
 public class Interceptor implements HandlerInterceptor {
 
+    private static final String Token_IN_HEADER = "Authorization";
+
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request,
                              @NotNull HttpServletResponse response,
@@ -34,28 +37,34 @@ public class Interceptor implements HandlerInterceptor {
             //检查请求的接口是否需要登入
             if (handlerMethod.getMethodAnnotation(BeforeLogin.class) == null) {
                 //获取请求头中携带的token
-                String token = request.getHeader("Authorization");
+                String token = request.getHeader(Token_IN_HEADER);
                 if (token == null) {
                     throw new TokenException("请登入!");
                 }
 
-                //获取token并提取出session
-                String session = JwtUtil.token.getClaim(token);
-                if (session == null) {
+                //获取token并解析出claims
+                Claims claims = JwtUtil.jwt.getClaim(token);
+                if (claims == null) {
                     throw new TokenException("请重新登入!");
                 }
 
-                //从redis中获取session对应的uid
-                String uid = RedisUtil.S.get(RedisKey.USER_SESSION.concat(session));
-
-                //uid为null表示键已过期或已被删除
-                if (uid == null) {
+                //从claims中提取出uid和sessionId
+                String uid = String.valueOf(claims.get(JwtUtil.CLAIM_UID));
+                String sessionId = String.valueOf(claims.get(JwtUtil.CLAIM_SESSION_ID));
+                if (uid == null || sessionId == null) {
                     throw new TokenException("请重新登入!");
                 }
 
-                //将uid和session存入请求的Attribute
+                //从redis中获取uid对应的session
+                String storedSessionId = RedisUtil.S.get(RedisKey.USER_SESSION.concat(uid));
+
+                //storedSessionId为null表示键已过期或已被删除，sessionId与之对应不上则表明token过期
+                if (storedSessionId == null || !storedSessionId.equals(sessionId)) {
+                    throw new TokenException("登入已过期，请重新登入!");
+                }
+
+                //将uid存入请求的Attribute标注请求发起者
                 request.setAttribute("uid", uid);
-                request.setAttribute("session", session);
             }
             return true;
         }

@@ -1,5 +1,6 @@
 package kiss.depot.websocket.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -17,41 +18,40 @@ import java.util.Date;
 * last update: 2024/11/4
 * */
 
-public class JwtUtil<T> {
+public class JwtUtil {
 
     //jwt密钥解析
-    public final SecretKey KEY = Keys.hmacShaKeyFor(STATIC.VALUE.jwt_secret.getBytes());
+    private final SecretKey KEY = Keys.hmacShaKeyFor(STATIC.VALUE.jwt_secret.getBytes());
 
     //jwt加密方式
-    public final SecureDigestAlgorithm<SecretKey,SecretKey> ALGORITHM = Jwts.SIG.HS256;
+    private final SecureDigestAlgorithm<SecretKey,SecretKey> ALGORITHM = Jwts.SIG.HS256;
 
     //设定claim使用的键
-    public final String CLAIM_KEY = "uid";
+    public static final String CLAIM_UID = "uid";
+    public static final String CLAIM_SESSION_ID = "sessionId";
 
-    //设定claim的泛型
-    public static final JwtUtil<String> token = new JwtUtil<>();
+    public static final JwtUtil jwt = new JwtUtil();
 
     //生成token，可以包裹更多东西，这里包装一个obj
-    public String generate(T obj) {
+    public String generate(Long uid, String sessionId) {
         return Jwts.builder()
                 .header().add("type","JWT")
                 .and()
-                .claim(CLAIM_KEY, obj)
+                .claim(CLAIM_UID, uid)
+                .claim(CLAIM_SESSION_ID, sessionId)
                 .expiration(new Date(System.currentTimeMillis() + STATIC.VALUE.jwt_expire))
                 .signWith(KEY,ALGORITHM)
                 .compact();
     }
 
     //解析token，得到包装的obj
-    @SuppressWarnings("unchecked")
-    public T getClaim(String token){
+    public Claims getClaim(String token){
         try {
-            return (T) Jwts.parser()
+            return Jwts.parser()
                     .verifyWith(KEY)
                     .build()
                     .parseSignedClaims(token)
-                    .getPayload()
-                    .get(CLAIM_KEY);
+                    .getPayload();
         } catch (JwtException | IllegalArgumentException e) {
             return  null;
         }
