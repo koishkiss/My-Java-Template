@@ -13,7 +13,6 @@ import kiss.depot.websocket.util.RedisUtil;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -22,6 +21,8 @@ public class AuthService {
 
     //注册锁
     private final ReentrantLock registerLock = new ReentrantLock();
+
+    private static final String userAuthLock = "/user/auth/";
 
     //注册
     public Response register(AuthPo auth) {
@@ -61,9 +62,6 @@ public class AuthService {
         }
     }
 
-    //对某个用户的登入状态单独上锁
-    ConcurrentHashMap<Long, Object> loginLock = new ConcurrentHashMap<>();
-
     //登入
     public Response login(AuthPo auth) {
         // 先进行登入检查
@@ -93,70 +91,75 @@ public class AuthService {
 
         // 登入检验通过，下面的步骤执行登入操作
 
-        //对各个用户的登入操作分别加锁
-        Object lock = loginLock.computeIfAbsent(user.getUid(), newLock -> new Object());
-        synchronized (lock) {
-            try {
-                //检查用户在别的地方是否有上线操作，有则需要中断在其它地方的长连接，当然也可以因为其它地方正在长连接而阻止该端口登入
-                //在这里仅允许单点上线的设计是合理的。如果有需求可以将手机端和电脑端的sessionId和长连接分开设置，实现双端登入上线状态分离
-                //还有一种实现，就是前端在执行登入接口前先查询是否存在其它地方已经上线的情况，如果存在就先询问再让用户确定是否登入
-                String userSessionKey = RedisKey.USER_SESSION.concat(String.valueOf(user.getUid()));
-                //这里应该替换成检查用户在其它地方是否开启长连接状态
-                if (RedisUtil.getExpire(userSessionKey) != -2) {
-                    //向该用户的消息队列推送登出信息，要求该用户在其它客户端进行的长连接下线
-                    System.out.println("下线其它地方长连接");
-                }
-
-                //生成随机code作为新session
-                String session = RandomUtil.generateRandomCode(4);
-
-                //将账号session存储进redis
-                RedisUtil.S.VALUE.set(
-                        userSessionKey,
-                        session,
-                        STATIC.VALUE.jwt_expire,
-                        TimeUnit.MILLISECONDS
-                );
-
-                //创建用户信息
-                UserInfo userInfo = new UserInfo(user);
-
-                //将用户信息存储进redis
-                String userInfoKey = RedisKey.USER_INFO.concat(String.valueOf(user.getUid()));
-                RedisUtil.H.setObject(userInfoKey, userInfo);
-
-                //设置用户信息缓存时间
-                RedisUtil.setExpire(userInfoKey, STATIC.VALUE.user_info_expire, TimeUnit.MILLISECONDS);
-
-                //将session打包进jwt后连带账号信息一起返回
-                @Getter
-                class UserDto {
-                    private final String token;
-                    private final UserInfo user;
-
-                    public UserDto(String session, UserInfo userInfo) {
-                        token = JwtUtil.jwt.generate(userInfo.getUid(), session);
-                        user = userInfo;
-                    }
-                }
-
-                return Response.success(new UserDto(session, userInfo));
-            } finally {
-                //释放锁资源
-                loginLock.remove(user.getUid());
+        //对各个用户的登入操作加锁
+        synchronized ((userAuthLock + auth.getUid()).intern()) {
+            //检查用户在别的地方是否有上线操作，有则需要中断在其它地方的长连接，当然也可以因为其它地方正在长连接而阻止该端口登入
+            //在这里仅允许单点上线的设计是合理的。如果有需求可以将手机端和电脑端的sessionId和长连接分开设置，实现双端登入上线状态分离
+            //还有一种实现，就是前端在执行登入接口前先查询是否存在其它地方已经上线的情况，如果存在就先询问再让用户确定是否登入
+            String userSessionKey = RedisKey.USER_SESSION.concat(String.valueOf(user.getUid()));
+            //这里应该替换成检查用户在其它地方是否开启长连接状态
+            if (RedisUtil.getExpire(userSessionKey) != -2) {
+                //向该用户的消息队列推送登出信息，要求该用户在其它客户端进行的长连接下线
+                System.out.println("下线其它地方长连接");
             }
+
+            //生成随机code作为新session
+            String session = RandomUtil.generateRandomCode(4);
+
+            //将账号session存储进redis
+            RedisUtil.S.VALUE.set(
+                    userSessionKey,
+                    session,
+                    STATIC.VALUE.jwt_expire,
+                    TimeUnit.MILLISECONDS
+            );
+
+            //创建用户信息
+            UserInfo userInfo = new UserInfo(user);
+
+            //将用户信息存储进redis
+            String userInfoKey = RedisKey.USER_INFO.concat(String.valueOf(user.getUid()));
+            RedisUtil.H.setObject(userInfoKey, userInfo);
+
+            //设置用户信息缓存时间
+            RedisUtil.setExpire(userInfoKey, STATIC.VALUE.user_info_expire, TimeUnit.MILLISECONDS);
+
+            //将session打包进jwt后连带账号信息一起返回
+            @Getter
+            class UserDto {
+                private final String token;
+                private final UserInfo user;
+
+                public UserDto(String session, UserInfo userInfo) {
+                    token = JwtUtil.jwt.generate(userInfo.getUid(), session);
+                    user = userInfo;
+                }
+            }
+
+            return Response.success(new UserDto(session, userInfo));
         }
     }
 
     //登出
-    public Response logout(String uid) {
-        //下线并清理用户的websocketSession
+    public Response logout(String uid, String sessionId) {
+        synchronized ((userAuthLock + uid).intern()) {
+            //下线并清理用户的websocketSession
 
-        //清理redis里的用户信息
-        if (RedisUtil.delete(RedisKey.USER_SESSION.concat(uid))) {
-            return Response.ok();
-        } else {
-            return Response.failure(400,"操作失败!");
+            //检查sessionId是否对应的上
+            String storedSessionId = RedisUtil.S.get(uid);
+            if (storedSessionId == null) {
+                return Response.ok();
+            }
+            if (!storedSessionId.equals(sessionId)) {
+                return Response.failure(400, "操作失败!");
+            }
+
+            //清理redis里的用户信息
+            if (RedisUtil.delete(RedisKey.USER_SESSION.concat(uid))) {
+                return Response.ok();
+            } else {
+                return Response.failure(400, "操作失败!");
+            }
         }
     }
 

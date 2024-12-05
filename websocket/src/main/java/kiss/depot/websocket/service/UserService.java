@@ -15,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class UserService {
 
+    //获取用户信息
     public Response getUserInfo(Long uid) {
         //uid不可为null
         if (uid == null) {
@@ -46,6 +47,12 @@ public class UserService {
 
         //返回用户信息
         return Response.success(userInfo);
+    }
+
+    //获取在线用户列表
+    public Response getUserOnline() {
+        //待补充
+        return null;
     }
 
 }

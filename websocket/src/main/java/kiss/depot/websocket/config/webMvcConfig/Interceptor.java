@@ -65,6 +65,7 @@ public class Interceptor implements HandlerInterceptor {
 
                 //将uid存入请求的Attribute标注请求发起者
                 request.setAttribute("uid", uid);
+                request.setAttribute("sessionId",sessionId);
             }
             return true;
         }

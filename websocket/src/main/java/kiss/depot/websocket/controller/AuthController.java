@@ -38,8 +38,8 @@ public class AuthController {
      * 登出
      */
     @PostMapping("/logout")
-    public Response logout(@RequestAttribute(value = "uid") String uid) {
-        return authService.logout(uid);
+    public Response logout(@RequestAttribute(value = "uid") String uid, @RequestAttribute("sessionId") String sessionId) {
+        return authService.logout(uid, sessionId);
     }
 
     /**

@@ -27,6 +27,8 @@ public class WebsocketHandler implements WebSocketHandler {
     public void handleMessage(@NotNull WebSocketSession session, @NotNull WebSocketMessage<?> message) {
         //打印消息发送日志
         log.info("收到信息！"  + session.getAttributes() + "\n" + message.getPayload() + "\n");
+
+        //转到service层解析并处理消息
     }
 
     @Override
@@ -37,11 +39,11 @@ public class WebsocketHandler implements WebSocketHandler {
 
     @Override
     public void afterConnectionClosed(@NotNull WebSocketSession session, @NotNull CloseStatus closeStatus) {
+        //关闭用于推送消息的线程
+
         //将session从WebsocketSessionUtil中释放
 
         //在redis设置用户离线状态
-
-        //关闭用于推送消息的线程
 
         //打印连接关闭信息到日志
         log.info("连接关闭！" + session.getAttributes() + "\n");

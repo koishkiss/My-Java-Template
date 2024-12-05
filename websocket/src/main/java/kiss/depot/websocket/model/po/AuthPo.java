@@ -44,3 +44,15 @@ public class AuthPo {
     }
 
 }
+
+
+/*
+* 表结构：
+CREATE TABLE `user_auth` (
+  `uid` bigint NOT NULL COMMENT '用户id',
+  `nickname` varchar(50) NOT NULL COMMENT '用户昵称',
+  `password` varchar(100) NOT NULL COMMENT '用户密码',
+  PRIMARY KEY (`uid`),
+  KEY `user_auth_nickname_IDX` (`nickname`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登入';
+* */
