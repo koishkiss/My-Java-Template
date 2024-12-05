@@ -11,24 +11,40 @@ import org.springframework.web.socket.WebSocketSession;
 public class WebsocketHandler implements WebSocketHandler {
     @Override
     public void afterConnectionEstablished(@NotNull WebSocketSession session) {
-        // 从redis获取连接id
+        //保存session到WebsocketSessionUtil管理
 
-        log.info("连接建立成功！" + session.getAttributes());
+        //在redis设置用户在线状态
+
+        //向用户推送欢迎词
+
+        //建立新线程用于推送消息
+
+        //打印成功信息到日志
+        log.info("连接建立成功！" + session.getAttributes() + "\n");
     }
 
     @Override
     public void handleMessage(@NotNull WebSocketSession session, @NotNull WebSocketMessage<?> message) {
-        log.info("收到信息！" + message.getPayload());
+        //打印消息发送日志
+        log.info("收到信息！"  + session.getAttributes() + "\n" + message.getPayload() + "\n");
     }
 
     @Override
     public void handleTransportError(@NotNull WebSocketSession session, @NotNull Throwable exception) {
-        log.info("传输过程出错！");
+        //打印长连接时的错误日志
+        log.info("传输过程出错！" + session.getAttributes() + "\n");
     }
 
     @Override
     public void afterConnectionClosed(@NotNull WebSocketSession session, @NotNull CloseStatus closeStatus) {
-        log.info("连接关闭！");
+        //将session从WebsocketSessionUtil中释放
+
+        //在redis设置用户离线状态
+
+        //关闭用于推送消息的线程
+
+        //打印连接关闭信息到日志
+        log.info("连接关闭！" + session.getAttributes() + "\n");
     }
 
     @Override

@@ -24,14 +24,14 @@ import org.springframework.web.servlet.ModelAndView;
 @Slf4j
 public class Interceptor implements HandlerInterceptor {
 
-    private static final String Token_IN_HEADER = "Authorization";
+    public static final String Token_IN_HEADER = "Authorization";
 
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request,
                              @NotNull HttpServletResponse response,
                              @NotNull Object handler) {
         //打印请求路径
-        log.info("一条新的请求 " + request.getServletPath());
+        log.info("收到新的请求 " + request.getServletPath() + "\n");
 
         if (handler instanceof HandlerMethod handlerMethod) {
             //检查请求的接口是否需要登入
