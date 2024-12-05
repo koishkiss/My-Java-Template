@@ -41,6 +41,7 @@ public class ChatRoomService {
                 //创建房间
                 MAPPER.chat_room.insert(newChatRoom);
                 //将创建者加入房间
+                //注意，mybatis plus自带的insert会自动返回id到po里
                 MAPPER.room_join.insert(new RoomJoinPo(uid, newChatRoom.getRoomId()));
                 //告知创建成功
                 return Response.ok();
