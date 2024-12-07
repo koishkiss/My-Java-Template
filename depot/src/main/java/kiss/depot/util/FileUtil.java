@@ -23,8 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class FileUtil {
 
-    //文件名锁集
-    private static final Map<String,Object> locks = new ConcurrentHashMap<>();
+    private static final String fileOperatorLock = "/operator/file/";
 
     //获取文件URL
     public static String getFileURL(String fileName, FileType fileType) {
@@ -100,8 +99,7 @@ public class FileUtil {
 
     //删除文件操作
     public static void removeFile(String fileName, FileType fileType) {
-        Object lock = locks.computeIfAbsent(fileName, newLock -> new Object());
-        synchronized (lock) {
+        synchronized ((fileOperatorLock + fileName).intern()) {
             File targetFile = new File(getFileLocalPath(fileName, fileType));
 
             if (!targetFile.exists()) {
@@ -111,8 +109,6 @@ public class FileUtil {
             if (!targetFile.delete()) {
                 throw CommonErrException.raise(CommonErr.FILE_OPERATOR_ERR.setMsg("文件删除失败!"));
             }
-
-            locks.remove(fileName);
         }
     }
 
