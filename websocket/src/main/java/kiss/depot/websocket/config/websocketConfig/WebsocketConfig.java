@@ -1,10 +1,16 @@
 package kiss.depot.websocket.config.websocketConfig;
 
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+
+/*
+* ws配置类
+* author: koishikiss
+* launch: 忘了
+* last update: 2024/12/8
+* */
 
 @Configuration
 @EnableWebSocket

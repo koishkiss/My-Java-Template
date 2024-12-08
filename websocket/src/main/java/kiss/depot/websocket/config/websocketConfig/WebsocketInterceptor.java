@@ -12,9 +12,18 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import java.util.List;
 import java.util.Map;
 
 import static kiss.depot.websocket.config.webMvcConfig.Interceptor.Token_IN_HEADER;
+
+/*
+* ws连接处理
+* 用于处理ws握手前后的访问控制操作
+* author: koishikiss
+* launch: 忘了
+* last update: 2024/12/8
+* */
 
 @Slf4j
 public class WebsocketInterceptor implements HandshakeInterceptor {
@@ -29,13 +38,13 @@ public class WebsocketInterceptor implements HandshakeInterceptor {
         log.info("收到新的长连接请求\n");
 
         //获取请求头中携带的token
-        String token = String.valueOf(request.getHeaders().get(Token_IN_HEADER));
-        if (token.equals("null")) {
+        List<String> tokens = request.getHeaders().get(Token_IN_HEADER);
+        if (tokens == null || tokens.isEmpty()) {
             throw new TokenException("请登入!");
         }
 
         //获取token并解析出claims
-        Claims claims = JwtUtil.jwt.getClaim(token);
+        Claims claims = JwtUtil.jwt.getClaim(tokens.get(0));
         if (claims == null) {
             throw new TokenException("请重新登入!");
         }
@@ -66,6 +75,6 @@ public class WebsocketInterceptor implements HandshakeInterceptor {
             @NotNull ServerHttpResponse response,
             @NotNull WebSocketHandler wsHandler,
             Exception exception) {
-        log.info("ws握手后");
+        log.info("ws握手后\n");
     }
 }
