@@ -21,7 +21,7 @@ import static kiss.depot.websocket.config.webMvcConfig.Interceptor.Token_IN_HEAD
 * ws连接处理
 * 用于处理ws握手前后的访问控制操作
 * author: koishikiss
-* launch: 忘了
+* launch: 2024/12/2
 * last update: 2024/12/8
 * */
 

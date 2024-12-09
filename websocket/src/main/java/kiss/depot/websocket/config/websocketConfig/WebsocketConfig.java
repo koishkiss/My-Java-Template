@@ -8,7 +8,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 /*
 * ws配置类
 * author: koishikiss
-* launch: 忘了
+* launch: 2024/12/2
 * last update: 2024/12/8
 * */
 

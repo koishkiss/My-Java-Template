@@ -5,7 +5,7 @@ package kiss.depot.util;
 * 未来可能考虑加上压缩存储
 * author: koishikiss
 * launch: 2024/11/1
-* last update: 2024/11/1
+* last update: 2024/12/7
 * */
 
 import kiss.depot.config.exceptionConfig.exceptions.CommonErrException;
