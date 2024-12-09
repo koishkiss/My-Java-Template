@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.web.socket.*;
 
+import java.util.concurrent.TimeUnit;
+
 /*
 * ws连接处理
 * 用于连接建立、停止、收到消息时的处理
@@ -27,7 +29,7 @@ public class WebsocketHandler implements WebSocketHandler {
         WebsocketUtil.SESSION_MAP.put(uid,session);
 
         //在redis设置用户在线状态
-        RedisUtil.H.set(RedisKey.USER_INFO.concat(uid), "status", "1");
+        RedisUtil.S.VALUE.set(RedisKey.USER_ONLINE.concat(uid), "1", 1, TimeUnit.HOURS);
 
         //向用户推送欢迎词
         WebsocketUtil.sendOneMessage(WsResponse.ok("/welcome!"), uid);
@@ -41,6 +43,9 @@ public class WebsocketHandler implements WebSocketHandler {
     @Override
     public void handleMessage(@NotNull WebSocketSession session, @NotNull WebSocketMessage<?> message) {
         String uid = session.getAttributes().get("uid").toString();
+
+        //刷新在线状态
+        RedisUtil.setExpire(RedisKey.USER_ONLINE.concat(uid), 1, TimeUnit.HOURS);
 
         //打印消息发送日志
         log.info("收到信息！"  + session.getAttributes() + "\n" + message.getPayload() + "\n");
@@ -59,7 +64,7 @@ public class WebsocketHandler implements WebSocketHandler {
         WebsocketUtil.SESSION_MAP.remove(uid);
 
         //在redis设置用户离线状态
-        RedisUtil.H.set(RedisKey.USER_INFO.concat(uid), "status", "0");
+        RedisUtil.delete(RedisKey.USER_ONLINE.concat(uid));
 
         //打印长连接时的错误日志
         log.info("传输过程出错！" + session.getAttributes() + "\n");
@@ -75,7 +80,7 @@ public class WebsocketHandler implements WebSocketHandler {
         WebsocketUtil.SESSION_MAP.remove(uid);
 
         //在redis设置用户离线状态
-        RedisUtil.H.set(RedisKey.USER_INFO.concat(uid), "status", "0");
+        RedisUtil.delete(RedisKey.USER_ONLINE.concat(uid));
 
         //打印连接关闭信息到日志
         log.info("连接关闭！" + session.getAttributes() + "\n");
