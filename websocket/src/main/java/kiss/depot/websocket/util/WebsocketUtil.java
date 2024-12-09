@@ -1,8 +1,10 @@
 package kiss.depot.websocket.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import kiss.depot.websocket.model.constant.STATIC;
+import kiss.depot.websocket.model.dto.request.WsRequest;
+import kiss.depot.websocket.model.enums.CommonErr;
+import kiss.depot.websocket.model.po.GroupChatPo;
+import kiss.depot.websocket.model.po.PrivateChatPo;
 import kiss.depot.websocket.model.vo.response.WsResponse;
 import kiss.depot.websocket.service.WebsocketService;
 import org.springframework.web.socket.TextMessage;
@@ -17,7 +19,7 @@ import java.util.Map;
 * 包括session池、发送消息操作等
 * author: koishikiss
 * launch: 2024/12/8
-* last update: 2024/12/8
+* last update: 2024/12/9
 * */
 
 public class WebsocketUtil {
@@ -33,9 +35,41 @@ public class WebsocketUtil {
      */
     public static void handleRoute(String payload, String uid) {
         try {
-            sendOneMessage(websocketService.test(STATIC.objectMapper.readValue(payload, new TypeReference<>() {})), uid);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            //解析request
+            WsRequest<?> request =  STATIC.objectMapper.readValue(payload, WsRequest.class);
+
+            //根据path参数确定message处理方法
+            switch (request.getPath()) {
+
+                //私聊
+                case "/chat/private" -> sendOneMessage(
+                        websocketService.sendPrivateChat(
+                                STATIC.objectMapper.convertValue(
+                                        request.getMessage(),
+                                        PrivateChatPo.class
+                                )
+                        ),
+                        uid
+                );
+
+                //群聊
+                case "/chat/group" -> sendOneMessage(
+                        websocketService.sendGroupChat(
+                                STATIC.objectMapper.convertValue(
+                                        request.getMessage(),
+                                        GroupChatPo.class
+                                )
+                        ),
+                        uid
+                );
+
+                //找不到对应path
+                default -> sendOneMessage(WsResponse.failure(CommonErr.RESOURCE_NOT_FOUND), uid);
+            }
+        } catch (Exception e) {
+            //告知发生错误，操作无法正确完成
+            sendOneMessage(WsResponse.failure(500,e.getMessage()), uid);
+            e.printStackTrace();
         }
     }
 
@@ -45,7 +79,9 @@ public class WebsocketUtil {
      */
     public static void sendOneMessage(WsResponse response, String uid) {
         try {
-            SESSION_MAP.get(uid).sendMessage(new TextMessage(STATIC.objectMapper.writeValueAsString(response)));
+            if (response != null)  {
+                SESSION_MAP.get(uid).sendMessage(new TextMessage(STATIC.objectMapper.writeValueAsString(response)));
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -56,9 +92,11 @@ public class WebsocketUtil {
      */
     public static void sendMoreMessage(WsResponse response, String... uidList) {
         try {
-            TextMessage textMessage = new TextMessage(STATIC.objectMapper.writeValueAsString(response));
-            for (String uid : uidList) {
-                SESSION_MAP.get(uid).sendMessage(textMessage);
+            if (response != null) {
+                TextMessage textMessage = new TextMessage(STATIC.objectMapper.writeValueAsString(response));
+                for (String uid : uidList) {
+                    SESSION_MAP.get(uid).sendMessage(textMessage);
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
