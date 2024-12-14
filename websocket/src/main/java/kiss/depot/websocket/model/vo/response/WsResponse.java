@@ -67,7 +67,13 @@ public class WsResponse {
 
     //用于主动返回消息
 
+    public static WsResponse message(String path) {
+        return new WsResponse(200,path,null);
+    }
 
+    public static WsResponse message(String path, Object message) {
+        return new WsResponse(200,path,message);
+    }
 
 
 
