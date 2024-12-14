@@ -5,6 +5,7 @@ import kiss.depot.websocket.config.exceptionConfig.exceptions.TokenException;
 import kiss.depot.websocket.model.enums.RedisKey;
 import kiss.depot.websocket.util.JwtUtil;
 import kiss.depot.websocket.util.RedisUtil;
+import kiss.depot.websocket.util.WebsocketUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.server.ServerHttpRequest;
@@ -66,6 +67,7 @@ public class WebsocketInterceptor implements HandshakeInterceptor {
 
         //将uid存入请求的Attribute标注长连接发起者
         attributes.put("uid", uid);
+        attributes.put("websocketSessionId", WebsocketUtil.generatorWebsocketSessionId(uid, sessionId));
         return true;
     }
 
