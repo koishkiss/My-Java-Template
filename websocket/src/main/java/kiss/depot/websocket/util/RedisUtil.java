@@ -23,7 +23,7 @@ import static kiss.depot.websocket.model.constant.STATIC.objectMapper;
 * redis工具类
 * author: koishikiss
 * launch: 2024/11/27
-* last update: 2024/11/30
+* last update: 2024/12/14
 * */
 
 @Component

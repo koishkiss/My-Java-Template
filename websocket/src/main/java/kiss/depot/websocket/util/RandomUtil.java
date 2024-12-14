@@ -4,7 +4,7 @@ package kiss.depot.websocket.util;
 * 随机案例生成工具类
 * author: koishikiss
 * launch: 2024/11/2
-* last update: 2024/11/2
+* last update: 2024/12/14
 * */
 
 import java.util.Random;
