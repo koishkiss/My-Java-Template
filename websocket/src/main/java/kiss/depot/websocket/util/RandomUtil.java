@@ -8,6 +8,7 @@ package kiss.depot.websocket.util;
 * */
 
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 
 public class RandomUtil {
@@ -30,6 +31,24 @@ public class RandomUtil {
         }
 
         return randomString.toString();
+    }
+
+    //按一定长度生成一段随机code并排除一个不可用code
+    public static String generateRandomCode(int length, String except) {
+        String result = generateRandomCode(length);
+        while (result.equals(except)) {
+            result = generateRandomCode(length);
+        }
+        return result;
+    }
+
+    //按一定长度生成一段随机code并排除一些不可用code
+    public static String generateRandomCode(int length, Set<String> excepts) {
+        String result = generateRandomCode(length);
+        while (excepts.contains(result)) {
+            result = generateRandomCode(length);
+        }
+        return result;
     }
 
     public static long generateRandomLongNum(long start, long end) {

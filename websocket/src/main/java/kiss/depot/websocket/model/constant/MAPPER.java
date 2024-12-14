@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import kiss.depot.websocket.mapper.AuthMapper;
 import kiss.depot.websocket.mapper.ChatRoomMapper;
+import kiss.depot.websocket.mapper.PrivateChatMapper;
 import kiss.depot.websocket.mapper.RoomJoinMapper;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ public class MAPPER {
         auth = authMapper;
         chat_room = chatRoomMapper;
         room_join = roomJoinMapper;
+        private_chat = privateChatMapper;
     }
 
     @Resource
@@ -29,5 +31,9 @@ public class MAPPER {
     @Resource
     RoomJoinMapper roomJoinMapper;
     public static RoomJoinMapper room_join;
+
+    @Resource
+    PrivateChatMapper privateChatMapper;
+    public static PrivateChatMapper private_chat;
 
 }

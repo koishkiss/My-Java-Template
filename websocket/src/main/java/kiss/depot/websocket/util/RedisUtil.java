@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Component;
@@ -31,7 +32,7 @@ public class RedisUtil {
     @Resource
     RedisTemplate<String, String> redisTemplate;
 
-    private static RedisTemplate<String, String> redis;
+    public static RedisTemplate<String, String> redis;
 
     @PostConstruct
     @SuppressWarnings("unused")
@@ -153,6 +154,52 @@ public class RedisUtil {
                 m.put(fields.get(i), values.get(i));
             }
             return objectMapper.convertValue(m, clazz);
+        }
+
+    }
+
+    /**
+     * List类型操作
+     */
+    public static class L {
+
+        /** 设置静态对象来完成对List类型数据操作 */
+        public static final ListOperations<String, String> LIST = redis.opsForList();
+
+        /** 在左侧插入对象的json串 */
+        public static <T> void leftPushObject(String key, T element) {
+            try {
+                LIST.leftPush(key,objectMapper.writeValueAsString(element));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /** 在右侧插入对象的json串 */
+        public static <T> void rightPushObject(String key, T element) {
+            try {
+                LIST.rightPush(key,objectMapper.writeValueAsString(element));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /** 在左侧弹出对象的json串 */
+        public static <T> T leftPopObject(String key, Class<T> clazz) {
+            try {
+                return objectMapper.readValue(LIST.leftPop(key),clazz);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        /** 在右侧弹出对象的json串 */
+        public static <T> T rightPopObject(String key, Class<T> clazz) {
+            try {
+                return objectMapper.readValue(LIST.rightPop(key),clazz);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
         }
 
     }
