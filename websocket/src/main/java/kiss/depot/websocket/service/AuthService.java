@@ -10,9 +10,13 @@ import kiss.depot.websocket.model.vo.response.Response;
 import kiss.depot.websocket.util.JwtUtil;
 import kiss.depot.websocket.util.RandomUtil;
 import kiss.depot.websocket.util.RedisUtil;
+import kiss.depot.websocket.util.WebsocketUtil;
 import lombok.Getter;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -97,19 +101,20 @@ public class AuthService {
             //在这里仅允许单点上线的设计是合理的。如果有需求可以将手机端和电脑端的sessionId和长连接分开设置，实现双端登入上线状态分离
             //还有一种实现，就是前端在执行登入接口前先查询是否存在其它地方已经上线的情况，如果存在就先询问再让用户确定是否登入
             String userSessionKey = RedisKey.USER_SESSION.concat(String.valueOf(user.getUid()));
-            //这里应该替换成检查用户在其它地方是否开启长连接状态
-            if (RedisUtil.getExpire(userSessionKey) != -2) {
+            //获取用户的旧sessionId
+            String oldSession = RedisUtil.S.get(userSessionKey);
+            if (oldSession != null && RedisUtil.getExpire(RedisKey.USER_ONLINE.concat(String.valueOf(user.getUid()))) != -2) {
                 //向该用户的消息队列推送登出信息，要求该用户在其它客户端进行的长连接下线
-                System.out.println("下线其它地方长连接");
+                // TODO: 下线其它地方的长连接
             }
 
-            //生成随机code作为新session
-            String session = RandomUtil.generateRandomCode(4);
+            //生成随机code作为新session，与旧session不重复
+            String newSession = RandomUtil.generateRandomCode(4, oldSession);
 
             //将账号session存储进redis
             RedisUtil.S.VALUE.set(
                     userSessionKey,
-                    session,
+                    newSession,
                     STATIC.VALUE.jwt_expire,
                     TimeUnit.MILLISECONDS
             );
@@ -117,12 +122,16 @@ public class AuthService {
             //创建用户信息
             UserInfo userInfo = new UserInfo(user);
 
-            //将用户信息存储进redis
-            String userInfoKey = RedisKey.USER_INFO.concat(String.valueOf(user.getUid()));
-            RedisUtil.H.setObject(userInfoKey, userInfo);
+            RedisUtil.redis.execute((RedisCallback<Object>) connection -> {
+                //将用户信息存储进redis
+                String userInfoKey = RedisKey.USER_INFO.concat(String.valueOf(user.getUid()));
+                RedisUtil.H.setObject(userInfoKey, userInfo);
 
-            //设置用户信息缓存时间
-            RedisUtil.setExpire(userInfoKey, STATIC.VALUE.user_info_expire, TimeUnit.MILLISECONDS);
+                //设置用户信息缓存时间
+                RedisUtil.setExpire(userInfoKey, STATIC.VALUE.user_info_expire, TimeUnit.MILLISECONDS);
+
+                return null;
+            });
 
             //将session打包进jwt后连带账号信息一起返回
             @Getter
@@ -136,7 +145,7 @@ public class AuthService {
                 }
             }
 
-            return Response.success(new UserDto(session, userInfo));
+            return Response.success(new UserDto(newSession, userInfo));
         }
     }
 
@@ -144,17 +153,29 @@ public class AuthService {
     public Response logout(String uid, String sessionId) {
         synchronized ((userAuthLock + uid).intern()) {
             //下线并清理用户的websocketSession
+            try {
+                String websocketSessionId = WebsocketUtil.generatorWebsocketSessionId(uid, sessionId);
+                WebSocketSession webSocketSession = WebsocketUtil.SESSION_MAP.get(websocketSessionId);
+                if (webSocketSession != null) {
+                    webSocketSession.close();
+                    WebsocketUtil.SESSION_MAP.remove(websocketSessionId);
+                }
+            } catch (IOException e) {
+                return Response.failure(400,"操作失败,请尝试先设置为离线状态!");
+            }
 
-            //检查sessionId是否对应的上
-            String storedSessionId = RedisUtil.S.get(uid);
+            //检查redis里的sessionId是否对应的上
+            String storedSessionId = RedisUtil.S.get(RedisKey.USER_SESSION.concat(uid));
             if (storedSessionId == null) {
+                //未获取到sessionId，可能登入已过期
                 return Response.ok();
             }
             if (!storedSessionId.equals(sessionId)) {
+                //对应不上，表明此时可能此时在试图下线别的地方刚登入时使用的sessionId
                 return Response.failure(400, "操作失败!");
             }
 
-            //清理redis里的用户信息
+            //清理redis里的用户session
             if (RedisUtil.delete(RedisKey.USER_SESSION.concat(uid))) {
                 return Response.ok();
             } else {
