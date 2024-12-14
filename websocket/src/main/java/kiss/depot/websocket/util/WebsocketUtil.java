@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 * 包括session池、发送消息操作等
 * author: koishikiss
 * launch: 2024/12/8
-* last update: 2024/12/9
+* last update: 2024/12/15
 * */
 
 @Slf4j
@@ -104,15 +104,17 @@ public class WebsocketUtil {
 //                );
 
                 //收到私聊消息
-                case "privateChat" -> sendOneMessage(
-                        websocketService.receivePrivateChat(
-                                STATIC.objectMapper.convertValue(
-                                        element.getMessage(),
-                                        PrivateChatPo.class
-                                )
-                        ),
-                        websocketSessionId
-                );
+                case "privateChat" -> {
+                    if(!sendOneMessage(
+                            websocketService.receivePrivateChat(
+                                    STATIC.objectMapper.convertValue(
+                                            element.getMessage(),
+                                            PrivateChatPo.class
+                                    )
+                            ),
+                            websocketSessionId
+                    ))RedisUtil.L.LIST.leftPush(RedisKey.USER_MESSAGE_LIST.concat(uid), message);
+                }
 
                 default -> log.info("消息队列出现未知类型：" + message);
             }
@@ -127,14 +129,17 @@ public class WebsocketUtil {
     /**
      * 向单个用户发送一条消息
      */
-    public static void sendOneMessage(WsResponse response, String websocketSessionId) {
+    public static boolean sendOneMessage(WsResponse response, String websocketSessionId) {
         try {
             if (response != null)  {
                 WebSocketSession webSocketSession = SESSION_MAP.get(websocketSessionId);
                 if (webSocketSession != null) {
                     webSocketSession.sendMessage(new TextMessage(STATIC.objectMapper.writeValueAsString(response)));
+                    return true;
+                } else {
+                    return false;
                 }
-            }
+            } else return true;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
