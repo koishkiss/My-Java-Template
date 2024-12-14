@@ -6,15 +6,16 @@ import lombok.AllArgsConstructor;
 * redis键前缀枚举类
 * author: koishikiss
 * launch: 2024/11/28
-* last update: 2024/12/9
+* last update: 2024/12/14
 * */
 
 @AllArgsConstructor
 public enum RedisKey {
     USER_SESSION("user:session"),
     USER_INFO("user:info"),
-
-    USER_ONLINE("user:online");
+    USER_ONLINE("user:online"),
+    USER_MESSAGE_LIST("user:message"),
+    CHAT_PRIVATE("chat:private");
 
     public final String prefix;
 
