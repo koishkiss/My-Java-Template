@@ -97,7 +97,7 @@ public class AuthService {
         // 登入检验通过，下面的步骤执行登入操作
 
         //对各个用户的登入操作加锁
-        String uid = String.valueOf(auth.getUid());
+        String uid = String.valueOf(user.getUid());
         synchronized ((userAuthLock + uid).intern()) {
             //检查用户在别的地方是否有上线操作，有则需要中断在其它地方的长连接，当然也可以因为其它地方正在长连接而阻止该端口登入
             //在这里仅允许单点上线的设计是合理的。如果有需求可以将手机端和电脑端的sessionId和长连接分开设置，实现双端登入上线状态分离

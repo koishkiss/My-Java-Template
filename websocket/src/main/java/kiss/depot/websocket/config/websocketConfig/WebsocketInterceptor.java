@@ -65,6 +65,11 @@ public class WebsocketInterceptor implements HandshakeInterceptor {
             throw new TokenException("登入已过期，请重新登入!");
         }
 
+        //已经是在线状态，禁止重复上线
+        if (RedisUtil.getExpire(RedisKey.USER_ONLINE.concat(uid)) != -2) {
+            throw new TokenException("重复的操作!");
+        }
+
         //将uid存入请求的Attribute标注长连接发起者
         attributes.put("uid", uid);
         attributes.put("websocketSessionId", WebsocketUtil.generatorWebsocketSessionId(uid, sessionId));
