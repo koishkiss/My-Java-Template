@@ -12,7 +12,7 @@ import lombok.Setter;
 * 常用失败返回请在CommonErr内添加，保证统一性
 * author: koishikiss
 * launch: 2024/12/8
-* last update: 2024/12/8
+* last update: 2024/12/15
 * */
 
 @Getter

@@ -96,13 +96,6 @@ public class WebsocketUtil {
             //根据path参数确定message处理方法
             switch (element.getType()) {
 
-                //收到强制登出要求
-//                case "forceLogout" -> websocketService.beingForceLogout(
-//                        STATIC.objectMapper.convertValue(element.getMessage(),String.class),
-//                        uid,
-//                        websocketSessionId
-//                );
-
                 //收到私聊消息
                 case "privateChat" -> {
                     if(!sendOneMessage(

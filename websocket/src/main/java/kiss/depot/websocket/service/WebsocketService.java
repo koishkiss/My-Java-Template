@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 * ws消息处理
 * author: koishikiss
 * launch: 2024/12/8
-* last update: 2024/12/14
+* last update: 2024/12/15
 * */
 
 @Service
@@ -58,14 +58,9 @@ public class WebsocketService {
 
     //--------------------- 处理消息队列消息 ---------------------//
 
-    //接受到登出消息
-    public WsResponse beingForceLogout() {
-        return null;
-    }
-
     //接收到私聊消息
     public WsResponse receivePrivateChat(PrivateChatPo receivedChat) {
-        return WsResponse.success("/private/chat/receive",receivedChat);
+        return WsResponse.message("/private/chat/receive",receivedChat);
     }
 
 }
