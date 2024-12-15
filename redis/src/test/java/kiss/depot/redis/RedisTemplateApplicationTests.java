@@ -23,10 +23,10 @@ class RedisTemplateApplicationTests {
 	@Test
 	void testForSet() {
 		//设置键为a，值为b的键值对
-		RedisUtil.S.set("a","b");
+		RedisUtil.S.VALUE.set("a","b");
 
 		//获取键为a的值
-		String a = RedisUtil.S.get("a");
+		String a = RedisUtil.S.VALUE.get("a");
 
 		//打印值
 		System.out.println(a);
@@ -66,8 +66,8 @@ class RedisTemplateApplicationTests {
 		System.out.println(deleted);
 
 		//预先设置好两个键值对
-		RedisUtil.S.set("d","123");
-		RedisUtil.S.set("e","123");
+		RedisUtil.S.VALUE.set("d","123");
+		RedisUtil.S.VALUE.set("e","123");
 
 		//将c、d、e一并删除
 		long deletes = RedisUtil.delete(List.of(new String[]{"c", "d", "e"}));
@@ -91,18 +91,18 @@ class RedisTemplateApplicationTests {
 		System.out.println(c);
 
 		//查看此时键c的过期时间
-		System.out.println(RedisUtil.getExpire("c"));
+		System.out.println(RedisUtil.redis.getExpire("c"));
 
 
 		//预先设置一下键值对b
-		RedisUtil.S.set("b","111");
+		RedisUtil.S.VALUE.set("b","111");
 
 		//设置键的过期时间
 		boolean b = RedisUtil.setExpire("b",100);
 
 		if (b) {
 			//输出键的过期时间
-			System.out.println((RedisUtil.getExpire("b")));
+			System.out.println((RedisUtil.redis.getExpire("b")));
 		}
 
 	}
@@ -161,7 +161,7 @@ class RedisTemplateApplicationTests {
 			//创建线程任务
 			Runnable task = () -> {
 				//获取自增键
-				Long uid = RedisUtil.S.increment(RedisKey.INCR.concat("uid"));
+				Long uid = RedisUtil.S.VALUE.increment(RedisKey.INCR.concat("uid"));
 
 				//打印获取的自增id
 				System.out.println(uid);
