@@ -17,17 +17,17 @@ import java.util.TimeZone;
 * 日期反序列化配置类
 * author: 网上找的忘了是谁
 * launch: 2024/11/1
-* last update: 2024/11/1
+* last update: 2024/12/5
 * */
 
 @JsonComponent
 public class DateFormatConfig {
 
     //从yml文件中spring.jackson.date-format的位置获取值
-    @Value("${spring.jackson.date-format}")
+    @Value("${spring.jackson.date-format:yyyy-MM-dd HH:mm:ss}")
     protected String pattern;
 
-    @Value("${spring.jackson.time-zone}")
+    @Value("${spring.jackson.time-zone:GMT+8}")
     protected String time_zone;
 
     // Date 类型全局时间格式化
