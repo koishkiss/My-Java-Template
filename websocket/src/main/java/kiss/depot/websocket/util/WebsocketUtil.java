@@ -1,7 +1,8 @@
 package kiss.depot.websocket.util;
 
 import kiss.depot.websocket.model.constant.STATIC;
-import kiss.depot.websocket.model.dto.UserMessageQueueElement;
+import kiss.depot.websocket.model.dto.messageQueue.ForceLogoutCheckInfo;
+import kiss.depot.websocket.model.dto.messageQueue.UserMessageQueueElement;
 import kiss.depot.websocket.model.dto.request.WsRequest;
 import kiss.depot.websocket.model.enums.CommonErr;
 import kiss.depot.websocket.model.enums.RedisKey;
@@ -52,24 +53,13 @@ public class WebsocketUtil {
 
                 //私聊
                 case "/chat/private" -> sendOneMessage(
-                        websocketService.sendPrivateChat(
-                                STATIC.objectMapper.convertValue(
-                                        request.getMessage(),
-                                        PrivateChatPo.class
-                                ),
-                                uid
-                        ),
+                        websocketService.sendPrivateChat(request.getMessage(PrivateChatPo.class), uid),
                         websocketSessionId
                 );
 
                 //群聊
                 case "/chat/group" -> sendOneMessage(
-                        websocketService.sendGroupChat(
-                                STATIC.objectMapper.convertValue(
-                                        request.getMessage(),
-                                        GroupChatPo.class
-                                )
-                        ),
+                        websocketService.sendGroupChat(request.getMessage(GroupChatPo.class)),
                         websocketSessionId
                 );
 
@@ -96,17 +86,19 @@ public class WebsocketUtil {
             //根据path参数确定message处理方法
             switch (element.getType()) {
 
+                //收到强制下线消息
+                case "forceLogout" -> websocketService.receiveForceLogout(
+                        element.getMessage(ForceLogoutCheckInfo.class),
+                        uid,
+                        websocketSessionId
+                );
+
                 //收到私聊消息
                 case "privateChat" -> {
                     if(!sendOneMessage(
-                            websocketService.receivePrivateChat(
-                                    STATIC.objectMapper.convertValue(
-                                            element.getMessage(),
-                                            PrivateChatPo.class
-                                    )
-                            ),
+                            websocketService.receivePrivateChat(element.getMessage(PrivateChatPo.class)),
                             websocketSessionId
-                    ))RedisUtil.L.LIST.leftPush(RedisKey.USER_MESSAGE_LIST.concat(uid), message);
+                    )) RedisUtil.L.LIST.leftPush(RedisKey.USER_MESSAGE_LIST.concat(uid), message);
                 }
 
                 default -> log.info("消息队列出现未知类型：" + message);

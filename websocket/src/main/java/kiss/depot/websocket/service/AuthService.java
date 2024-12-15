@@ -3,11 +3,12 @@ package kiss.depot.websocket.service;
 import kiss.depot.websocket.model.constant.MAPPER;
 import kiss.depot.websocket.model.constant.STATIC;
 import kiss.depot.websocket.model.dto.UserInfo;
+import kiss.depot.websocket.model.dto.messageQueue.ForceLogoutCheckInfo;
+import kiss.depot.websocket.model.dto.messageQueue.UserMessageQueueElement;
 import kiss.depot.websocket.model.enums.CommonErr;
 import kiss.depot.websocket.model.enums.RedisKey;
 import kiss.depot.websocket.model.po.AuthPo;
 import kiss.depot.websocket.model.vo.response.Response;
-import kiss.depot.websocket.model.vo.response.WsResponse;
 import kiss.depot.websocket.util.JwtUtil;
 import kiss.depot.websocket.util.RandomUtil;
 import kiss.depot.websocket.util.RedisUtil;
@@ -106,16 +107,15 @@ public class AuthService {
             //获取用户的旧sessionId
             String oldSession = RedisUtil.S.get(userSessionKey);
             if (oldSession != null && RedisUtil.getExpire(RedisKey.USER_ONLINE.concat(String.valueOf(user.getUid()))) != -2) {
-                // 下线其它地方的长连接
-                try {
-                    String oldWebsocketSessionId = WebsocketUtil.generatorWebsocketSessionId(uid, oldSession);
-                    WebSocketSession webSocketSession = WebsocketUtil.SESSION_MAP.get(oldWebsocketSessionId);
-                    if (webSocketSession != null) {
-                        WebsocketUtil.sendOneMessage(WsResponse.message("/force/logout"), oldWebsocketSessionId);
-                        webSocketSession.close();
-                        WebsocketUtil.SESSION_MAP.remove(oldWebsocketSessionId);
-                    }
-                } catch (IOException ignored) {}
+                // 将下线消息广播到消息队列，要求其它正在监控消息队列的设备下线
+                // 从左侧插入消息队列，因为该消息优先级高
+                RedisUtil.L.leftPushObject(
+                        RedisKey.USER_MESSAGE_LIST.concat(uid),
+                        new UserMessageQueueElement<>(
+                                "forceLogout",
+                                new ForceLogoutCheckInfo(uid, oldSession)
+                        )
+                );
             }
 
             //生成随机code作为新session，与旧session不重复

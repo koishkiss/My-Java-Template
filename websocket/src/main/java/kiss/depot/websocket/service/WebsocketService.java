@@ -1,14 +1,18 @@
 package kiss.depot.websocket.service;
 
 import kiss.depot.websocket.model.constant.MAPPER;
-import kiss.depot.websocket.model.dto.UserMessageQueueElement;
+import kiss.depot.websocket.model.dto.messageQueue.ForceLogoutCheckInfo;
+import kiss.depot.websocket.model.dto.messageQueue.UserMessageQueueElement;
 import kiss.depot.websocket.model.enums.CommonErr;
 import kiss.depot.websocket.model.enums.RedisKey;
 import kiss.depot.websocket.model.po.GroupChatPo;
 import kiss.depot.websocket.model.po.PrivateChatPo;
 import kiss.depot.websocket.model.vo.response.WsResponse;
 import kiss.depot.websocket.util.RedisUtil;
+import kiss.depot.websocket.util.WebsocketUtil;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 /*
 * ws消息处理
@@ -57,6 +61,27 @@ public class WebsocketService {
     }
 
     //--------------------- 处理消息队列消息 ---------------------//
+
+    //接收到强制下线命令
+    public void receiveForceLogout(ForceLogoutCheckInfo checkInfo, String uid, String websocketSessionId) {
+        //检查命令是否过期
+        if (checkInfo.checkUnexpired()) {
+            try {
+                //检查命令是否匹对
+                if (checkInfo.checkMatched(websocketSessionId)) {
+                    WebsocketUtil.sendOneMessage(WsResponse.message("/force/logout"), websocketSessionId);
+                    WebsocketUtil.SESSION_MAP.get(websocketSessionId).close();
+                } else {
+                    //将命令放回队列
+                    RedisUtil.L.leftPushObject(
+                            RedisKey.USER_MESSAGE_LIST.concat(uid),
+                            new UserMessageQueueElement<>("forceLogout", checkInfo));
+                    //损失500毫秒性能来保证能将消息传递给正确的设备
+                    Thread.sleep(500);
+                }
+            } catch (IOException | InterruptedException ignored) {}
+        }
+    }
 
     //接收到私聊消息
     public WsResponse receivePrivateChat(PrivateChatPo receivedChat) {
