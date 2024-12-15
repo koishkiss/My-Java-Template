@@ -120,3 +120,15 @@ CREATE TABLE `depot_user` (
 当然这不是最佳实践，因为还没实践过。
 ```
 
+#### *2024/12/15*
+
+```text
+更新了STATIC静态数据存放类，添加了一个静态的objectMapper
+静态的objectMapper调用起来很方便，因此用静态
+此外通过静态初始化的方式将LocalDateTime等类的序列化反序列化方式丢进了这个objectMapper里，这样就能对LocalDateTime进行序列化反序列化了。
+
+此外，还更新了RandomUtil，满足了更多需求，比如要求生成与上次生成结果不同的随机变量这样的要求。
+
+还给DateFormatConfig中时区、时间模版的值设置了默认。
+```
+
