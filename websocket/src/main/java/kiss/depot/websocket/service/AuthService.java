@@ -168,7 +168,6 @@ public class AuthService {
                 WebSocketSession webSocketSession = WebsocketUtil.SESSION_MAP.get(websocketSessionId);
                 if (webSocketSession != null) {
                     webSocketSession.close();
-                    WebsocketUtil.SESSION_MAP.remove(websocketSessionId);
                 }
             } catch (IOException e) {
                 return Response.failure(400,"操作失败,请尝试先设置为离线状态!");
