@@ -62,3 +62,18 @@ public class PrivateChatPo {
     }
 
 }
+
+
+
+/*
+* 表结构：
+CREATE TABLE `private_chat_record` (
+  `chat_id` bigint NOT NULL COMMENT '记录编号',
+  `user_from` bigint NOT NULL COMMENT '发起用户',
+  `user_to` bigint NOT NULL COMMENT '接收用户',
+  `chat_content` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '内容',
+  PRIMARY KEY (`chat_id`),
+  KEY `private_chat_record_user_to_IDX` (`user_to`,`user_from`) USING BTREE,
+  KEY `private_chat_record_user_from_IDX` (`user_from`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='私聊记录';
+* */

@@ -27,7 +27,7 @@ public class WebsocketHandler implements WebSocketHandler {
         String websocketSessionId = session.getAttributes().get("websocketSessionId").toString();
 
         //保存session到WebsocketSessionUtil管理，以uid+sessionId的形式作为key
-        WebsocketUtil.SESSION_MAP.put(websocketSessionId,session);
+        WebsocketUtil.SESSION_MAP.put(websocketSessionId, session);
 
         //在redis设置用户在线状态
         RedisUtil.S.VALUE.set(RedisKey.USER_ONLINE.concat(uid), "1", 1, TimeUnit.HOURS);

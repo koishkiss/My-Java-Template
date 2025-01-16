@@ -70,14 +70,14 @@
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
 
-		<!--mysql连接依赖-->
+		<!-- mysql连接依赖 -->
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 
-		<!--mysql查询依赖-->
+		<!-- mysql查询依赖 -->
 		<dependency>  <!--mybatis-plus查询-->
 			<groupId>com.baomidou</groupId>
 			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>

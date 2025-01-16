@@ -14,8 +14,7 @@ public enum RedisKey {
     USER_SESSION("user:session"),
     USER_INFO("user:info"),
     USER_ONLINE("user:online"),
-    USER_MESSAGE_LIST("user:message"),
-    CHAT_PRIVATE("chat:private");
+    USER_MESSAGE_LIST("user:message");
 
     public final String prefix;
 

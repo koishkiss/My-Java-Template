@@ -11,6 +11,53 @@ websocket使用模版。
 项目结构：
 
 ```shell
+* main
+  ├┈ annotation  # 自定义注解包
+  │   └┈ BeforeLogin  # 标记无需登入就可使用的接口
+  │
+  ├┈ config  # 配置类包
+  │   ├┈ exceptionConfig  # 配置错误处理架构
+  │   ├┈ webMvcConfig  # 配置Mvc操作
+  │   ├┈ websocketConfig  # 配置websocket
+  │   │   ├┈ WebsocketConfig  # websocket核心配置
+  │   │   ├┈ WebsocketHandler  # websocket消息接收处理配置
+  │   │   └┈ WebsocketInterceptor  # websocket握手过滤器
+  │   └┈ RedisConfig  # 配置Redis
+  │
+  ├┈ controller  # controller包
+  │   ├┈ AuthController  # 用户权限接口
+  │   │   ├┈ register  # 注册
+  │   │   ├┈ login  # 登入
+  │   │   ├┈ logout  # 登出
+  │   │   └┈ logoff  # 注销（未完成）
+  │   ├┈ ChatRoomController  # 聊天室接口
+  │   └┈ UserController  #  用户信息接口
+  │
+  ├┈ service  # service包，与controller包一一对应
+  │
+  ├┈ mapper  # mapper包
+  │
+  ├┈ model  # 数据模型包
+  │   ├┈ bo  # 业务逻辑对象包
+  │   │   └┈ pageBo  # 分页查询
+  │   │       ├┈ AllPageSearchBo  # 全页码分页查询
+  │   │       ├┈ SinglePageSearchBo  # 无页码分页查询
+  │   │       └┈ MorePageSearchBo  # 多页码分页查询
+  │   ├┈ constant  # 静态提供包
+  │   │   ├┈ MAPPER  # mapper静态注入
+  │   │   └┈ STATIC  # 静态数据存放
+  │   ├┈ enums  # 枚举类包
+  │   │   └┈ CommonErr  # 常用错误返回枚举
+  │   └┈ vo  # 视图对象包
+  │       ├┈ pageVo  # 分页查询结果返回vo对象
+  │       └┈ response  # 最终返回响应包装类Response
+  │
+  └┈ util  # 工具类包
+      ├┈ BCryptUtil  # 封装BCrypt操作
+      ├┈ JwtUtil  # 封装jwt操作
+      ├┈ ObjectUtil  # 操作对象工具
+      ├┈ RandomUtil  # 随机生成工具
+      └┈ TextUtil  # 文本操作工具
 
 ```
 
@@ -18,12 +65,66 @@ mysql数据库结构：
 
 ```shell
 ws_test  # 库名称
+  ├┈ chat_room  # 聊天群表
+  ├┈ private_chat_record  # 私聊记录表
+  ├┈ room_join  # 用户加入的聊天群记录表
+  └┈ user_auth  # 用户认证信息表
+
+
+==================== chat_room表结构 ====================
+
+CREATE TABLE `chat_room` (
+  `room_id` bigint NOT NULL COMMENT '房间号id',
+  `creator` bigint NOT NULL COMMENT '创建者id',
+  `room_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '房间名',
+  PRIMARY KEY (`room_id`),
+  KEY `chat_room_room_name_IDX` (`room_name`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='聊天室';
+
+
+==================== private_chat_record表结构 ====================
+
+CREATE TABLE `private_chat_record` (
+  `chat_id` bigint NOT NULL COMMENT '记录编号',
+  `user_from` bigint NOT NULL COMMENT '发起用户',
+  `user_to` bigint NOT NULL COMMENT '接收用户',
+  `chat_content` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '内容',
+  PRIMARY KEY (`chat_id`),
+  KEY `private_chat_record_user_to_IDX` (`user_to`,`user_from`) USING BTREE,
+  KEY `private_chat_record_user_from_IDX` (`user_from`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='私聊记录';
+
+
+==================== room_join表结构 ====================
+
+CREATE TABLE `room_join` (
+  `uid` bigint NOT NULL COMMENT '用户id',
+  `room_id` bigint NOT NULL COMMENT '房间id',
+  PRIMARY KEY (`uid`,`room_id`),
+  KEY `room_join_roomId_IDX` (`room_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='聊天室加入情况';
+
+
+==================== user_auth表结构 ====================
+
+CREATE TABLE `user_auth` (
+  `uid` bigint NOT NULL COMMENT '用户id',
+  `nickname` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户昵称',
+  `password` varchar(100) NOT NULL COMMENT '用户密码',
+  PRIMARY KEY (`uid`),
+  KEY `user_auth_nickname_IDX` (`nickname`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户登入';
 ```
 
 redis数据结构：
 
 ```shell
 库index：2
+  └┈ user  # 用户相关存储
+      ├┈ session:uid  # 用户sessionId存储
+      ├┈ info:uid  # 用户身份信息缓存
+      ├┈ online:uid  # 用户在线状态标记
+      └┈ message:uid  # 用户接收消息队列
 ```
 
 ---
